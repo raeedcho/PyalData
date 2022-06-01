@@ -1,7 +1,6 @@
-from . import utils
-from . import extract_signals
-
 import numpy as np
+
+from . import extract_signals, utils
 
 
 def fit_regressor_model(trial_data, model, input_signal, output_signal, train_indices=None):

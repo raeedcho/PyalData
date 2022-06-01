@@ -74,30 +74,50 @@ def get_time_varying_fields(trial_data, ref_field=None):
     time_fields : list of str
         list of fieldnames that store time-varying signals
     """
+    # identify candidates in each trial and take union
+    time_field_sets_per_trial= [set(get_time_varying_fields_in_trial(trial, ref_field=ref_field))
+                            for _,trial in trial_data.iterrows()]
+    time_fields = set().union(*time_field_sets_per_trial)
+
+    # check if all trials have the same time-varying fields
+    for time_fields_in_trial in time_field_sets_per_trial:
+        set_diff = set(time_fields) - set(time_fields_in_trial)
+        assert len(set_diff)==0, f"{set_diff} on {trial['trial_id']} have bad lengths"
+
+    return list(time_fields)
+
+def get_time_varying_fields_in_trial(trial, ref_field=None):
+    """
+    Get the names of time-varying fields in the trial
+
+    Parameters
+    ----------
+    trial : pd.Series
+        trial to check
+    ref_field : str, optional
+        time-varying field to use for identifying the rest
+        if not given, the first field that ends with "spikes" or "rates" is used
+
+    Returns
+    -------
+    time_fields : list of str
+    """
     if ref_field is None:
         # look for a spikes field
-        ref_field = [col for col in trial_data.columns.values
+        ref_field = [col for col in trial.index.values
                      if col.endswith("spikes") or col.endswith("rates")][0]
 
     # identify candidates based on the first trial
-    first_trial = trial_data.iloc[0]
-    T = first_trial[ref_field].shape[0]
+    T = trial[ref_field].shape[0]
     time_fields = []
-    for col in first_trial.index:
+    for col in trial.index:
         try:
-            if first_trial[col].shape[0] == T:
+            if trial[col].shape[0] == T:
                 time_fields.append(col)
         except:
             pass
 
-    # but check the rest of the trials, too
-    ref_lengths = np.array([arr.shape[0] for arr in trial_data[ref_field]])
-    for col in time_fields:
-        col_lengths = np.array([arr.shape[0] for arr in trial_data[col]])
-        assert np.all(col_lengths == ref_lengths), f"not all lengths in {col} match the reference {ref_field}"
-
     return time_fields
-
 
 def get_array_fields(trial_data):
     """

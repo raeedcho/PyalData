@@ -102,13 +102,8 @@ def get_time_varying_fields_in_trial(trial, ref_field=None):
     -------
     time_fields : list of str
     """
-    if ref_field is None:
-        # look for a spikes field
-        ref_field = [col for col in trial.index.values
-                     if col.endswith("spikes") or col.endswith("rates")][0]
-
-    # identify candidates based on the first trial
-    T = trial[ref_field].shape[0]
+    # identify candidates based on trial length
+    T = get_trial_length(trial, ref_field=ref_field)
     time_fields = []
     for col in trial.index:
         try:

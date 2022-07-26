@@ -80,9 +80,11 @@ def get_time_varying_fields(trial_data, ref_field=None):
     time_fields = set().union(*time_field_sets_per_trial)
 
     # check if all trials have the same time-varying fields
-    for time_fields_in_trial in time_field_sets_per_trial:
+    # Note: in some cases, this check will fail,
+    # specifically if the time varying fields on one or more trials happens to be the same length as the number of neurons
+    for trialnum,time_fields_in_trial in enumerate(time_field_sets_per_trial):
         set_diff = set(time_fields) - set(time_fields_in_trial)
-        assert len(set_diff)==0, f"{set_diff} on {trial['trial_id']} have bad lengths"
+        assert len(set_diff)==0, f"{set_diff} on trial {trial_data['trial_id'].values[trialnum]} have bad lengths"
 
     return list(time_fields)
 

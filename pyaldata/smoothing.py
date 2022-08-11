@@ -67,7 +67,11 @@ def smooth_data(mat, dt=None, std=None, hw=None, win=None, backend='convolve1d')
     if win is None:
         assert dt is not None, "specify dt if not supplying window"
 
-        if std is None:
+        if hw is None:
+            if std is None:
+                std = 0.05
+        else:
+            assert (std is None), "only give hw or std"
             std = hw_to_std(hw)
 
         win = norm_gauss_window(dt, std)

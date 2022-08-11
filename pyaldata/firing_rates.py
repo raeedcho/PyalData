@@ -35,32 +35,19 @@ def add_firing_rates(trial_data, method, std=None, hw=None, win=None, backend='c
     rate_suffix = "_rates"
     rate_fields = [utils.remove_suffix(name, "_spikes") + rate_suffix for name in spike_fields]
 
-    bin_size = trial_data['bin_size'].values[0]
-
     if method == "smooth":
-        if win is None:
-            if hw is None:
-                if std is None:
-                    std = 0.05
-            else:
-                assert (std is None), "only give hw or std"
-
-                std = smoothing.hw_to_std(hw)
-
-            win = smoothing.norm_gauss_window(bin_size, std)
-
-        def get_rate(spikes):
-            return smoothing.smooth_data(spikes, win=win, backend=backend) / bin_size
+        def get_rate(spikes,bin_size):
+            return smoothing.smooth_data(spikes/bin_size, dt=bin_size, std=std, hw=hw, win=win, backend=backend)
 
     elif method == "bin":
         assert all([x is None for x in [std, hw, win]]), "If binning is used, then std, hw, and win have no effect, so don't provide them."
 
-        def get_rate(spikes):
+        def get_rate(spikes,bin_size):
             return spikes / bin_size
 
     # calculate rates for every spike field
     for (spike_field, rate_field) in zip(spike_fields, rate_fields):
-        trial_data[rate_field] = [get_rate(spikes) for spikes in trial_data[spike_field]]
+        trial_data[rate_field] = [get_rate(spikes,bin_size) for spikes,bin_size in zip(trial_data[spike_field],trial_data['bin_size'])]
 
     return trial_data
 
